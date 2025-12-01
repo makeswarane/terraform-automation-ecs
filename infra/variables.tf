@@ -28,3 +28,8 @@ variable "wordpress_port"       { type = number }
 variable "microservice_port"    { type = number }
 variable "instance_port"        { type = number }
 variable "docker_port"          { type = number }
+
+variable "ecs_cluster_name"     { type = string }
+variable "ec2_demo_count"       { type = number }
+variable "ec2_demo_type"        { type = string }
+variable "region"               { type = string }

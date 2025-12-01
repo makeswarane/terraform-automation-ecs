@@ -3,7 +3,10 @@ name: Destroy All Resources (Manual)
 
 on:
   workflow_dispatch:
-
+# ← ADD THESE 4 LINES ←
+permissions:
+  id-token: write
+  contents: read
 jobs:
   destroy:
     runs-on: ubuntu-latest

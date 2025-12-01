@@ -1,7 +1,18 @@
-FROM node:18-alpine
+# microservice/Dockerfile
+FROM node:20-alpine
+
+# Create app directory
 WORKDIR /app
+
+# Copy only needed files
 COPY package.json .
-COPY server.js .
-RUN npm install --production || true
+RUN npm install --only=production
+
+# Copy source code
+COPY app.js .
+
+# Expose port
 EXPOSE 3000
-CMD ["node","server.js"]
+
+# Run the app
+CMD ["npm", "start"]

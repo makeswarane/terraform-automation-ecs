@@ -1,37 +1,30 @@
-variable "project" { type = string }
-variable "environment" { type = string }
-variable "aws_region" { type = string }
-variable "account_id" { type = string }
+variable "region"               { type = string }
+variable "environment"          { type = string }
+variable "domain_name"          { type = string }
+variable "acm_certificate_arn"  { type = string }
 
-variable "domain" { type = string }
+variable "vpc_cidr"             { type = string }
+variable "public_subnets"       { type = list(string) }
+variable "private_subnets"      { type = list(string) }
 
-variable "vpc_cidr" { type = string }
-variable "public_subnet_cidrs" { type = list(string) }
-variable "private_subnet_cidrs" { type = list(string) }
+variable "ecs_cluster_name"     { type = string }
+variable "ecs_instance_type"    { type = string }
+variable "ecs_min_size"         { type = number }
+variable "ecs_max_size"         { type = number }
+variable "ecs_desired_capacity" { type = number }
 
-variable "acm_certificate_arn" { type = string }
-variable "cluster_name" { type = string }
-
-variable "ecs_instance_type" { type = string }
-variable "ecs_instance_min" { type = number }
-variable "ecs_instance_desired" { type = number }
-variable "ecs_instance_max" { type = number }
-
-variable "ecr_microservice_name" { type = string }
-variable "microservice_container_port" { type = number }
-
-variable "wordpress_image" { type = string }
-variable "wordpress_container_port" { type = number }
-
-variable "enable_rds" { type = bool }
-variable "db_engine" { type = string }
-variable "db_instance_class" { type = string }
+variable "db_name"              { type = string }
+variable "db_instance_class"    { type = string }
 variable "db_allocated_storage" { type = number }
-variable "db_name" { type = string }
-variable "db_username" { type = string }
+variable "db_username"          { type = string }
+variable "db_password"          { type = string }
+variable "backup_retention"     { type = number }
+variable "skip_final_snapshot"  { type = bool }
 
-variable "create_ec2_app" { type = bool }
-variable "ec2_app_instance_type" { type = string }
-variable "ec2_app_count" { type = number }
+variable "ec2_demo_count"       { type = number }
+variable "ec2_demo_type"        { type = string }
 
-variable "tags" { type = map(string) default = {} }
+variable "wordpress_port"       { type = number }
+variable "microservice_port"    { type = number }
+variable "instance_port"        { type = number }
+variable "docker_port"          { type = number }

@@ -1,8 +1,8 @@
-variable "cluster_name" { type = string }
-variable "private_subnets" { type = list(string) }
-variable "ecs_instance_type" { type = string }
-variable "ecs_min" { type = number }
-variable "ecs_desired" { type = number }
-variable "ecs_max" { type = number }
-variable "iam_instance_profile" { type = string }
-variable "tags" { type = map(string) default = {} }
+variable "cluster_name"        { type = string }
+variable "instance_type"       { type = string }
+variable "min_size"            { type = number }
+variable "max_size"            { type = number }
+variable "desired_capacity"    { type = number }
+variable "private_subnet_ids"  { type = list(string) }
+variable "ecs_sg_id"           { type = string }
+variable "environment"         { type = string }

@@ -1,3 +1,2 @@
-output "secret_arn" {
-  value = length(aws_secretsmanager_secret.db) > 0 ? aws_secretsmanager_secret.db[0].arn : ""
-}
+output "secret_arn"     { value = aws_secretsmanager_secret.db.arn }
+output "db_password"    { value = random_password.db.result }

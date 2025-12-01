@@ -1,8 +1,6 @@
-variable "vpc_id" { type = string }
-variable "public_subnets" { type = list(string) }
-variable "domain" { type = string }
-variable "acm_certificate_arn" { type = string }
-variable "tags" { type = map(string) default = {} }
-variable "wordpress_port" { type = number default = 80 }
-variable "microservice_port" { type = number default = 3000 }
-variable "services" { type = map(string) default = {} }
+variable "vpc_id"            { type = string }
+variable "public_subnet_ids" { type = list(string) }
+variable "alb_sg_id"         { type = string }
+variable "certificate_arn"   { type = string }
+variable "domain_name"       { type = string }
+variable "environment"       { type = string }

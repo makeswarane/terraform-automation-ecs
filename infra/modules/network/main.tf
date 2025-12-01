@@ -1,46 +1,109 @@
-resource "aws_vpc" "this" {
-  cidr_block = var.vpc_cidr
-  tags = merge(var.tags, { Name = "${var.project}-${var.environment}-vpc" })
+# infra/modules/network/main.tf
+resource "aws_vpc" "main" {
+  cidr_block       = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = "${var.environment}-vpc"
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
-  vpc_id = aws_vpc.this.id
-  tags = merge(var.tags, { Name = "${var.project}-${var.environment}-igw" })
+  vpc_id = aws_vpc.main.id
+  tags   = { Name = "${var.environment}-igw" }
 }
 
 resource "aws_subnet" "public" {
-  for_each = { for idx, cidr in var.public_subnet_cidrs : idx => cidr }
-  vpc_id = aws_vpc.this.id
-  cidr_block = each.value
-  map_public_ip_on_launch = true
-  tags = merge(var.tags, { Name = "${var.project}-${var.environment}-public-${each.key}" })
+  count                   = length(var.public_subnets)
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnets[count.index]
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  map_public_ip_on_launch = false
+
+  tags = { Name = "${var.environment}-public-${count.index}" }
 }
 
 resource "aws_subnet" "private" {
-  for_each = { for idx, cidr in var.private_subnet_cidrs : idx => cidr }
-  vpc_id = aws_vpc.this.id
-  cidr_block = each.value
-  map_public_ip_on_launch = false
-  tags = merge(var.tags, { Name = "${var.project}-${var.environment}-private-${each.key}" })
+  count             = length(var.private_subnets)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.private_subnets[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = { Name = "${var.environment}-private-${count.index}" }
 }
 
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.this.id
-  tags = merge(var.tags, { Name = "${var.project}-${var.environment}-public-rt" })
+  vpc_id = aws_vpc.main.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+  tags = { Name = "${var.environment}-public-rt" }
 }
 
-resource "aws_route_table_association" "public_assoc" {
-  for_each = aws_subnet.public
-  subnet_id = each.value.id
+resource "aws_route_table_association" "public" {
+  count          = length(aws_subnet.public)
+  subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
 }
 
-resource "aws_route" "internet_access" {
-  route_table_id = aws_route_table.public.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id = aws_internet_gateway.igw.id
+# Security Groups
+resource "aws_security_group" "alb" {
+  name        = "${var.environment}-alb-sg"
+  vpc_id      = aws_vpc.main.id
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  egress { from_port = 0; to_port = 0; protocol = "-1"; cidr_blocks = ["0.0.0.0/0"] }
 }
 
-output "vpc_id" { value = aws_vpc.this.id }
-output "public_subnets" { value = [for s in aws_subnet.public : s.id] }
-output "private_subnets" { value = [for s in aws_subnet.private : s.id] }
+resource "aws_security_group" "private" {
+  name   = "${var.environment}-private-sg"
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.alb.id]
+  }
+  egress { from_port = 0; to_port = 0; protocol = "-1"; cidr_blocks = ["0.0.0.0/0"] }
+}
+
+# VPC Endpoints (free tier friendly)
+resource "aws_vpc_endpoint" "ecr_dkr" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.region}.ecr.dkr"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = aws_subnet.private[*].id
+  security_group_ids = [aws_security_group.private.id]
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.region}.ecr.api"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = aws_subnet.private[*].id
+  security_group_ids = [aws_security_group.private.id]
+  private_dns_enabled = true
+}
+
+resource "aws_vpc_endpoint" "logs" {
+  vpc_id            = aws_vpc.main.id
+  service_name      = "com.amazonaws.${var.region}.logs"
+  vpc_endpoint_type = "Interface"
+  subnet_ids        = aws_subnet.private[*].id
+  security_group_ids = [aws_security_group.private.id]
+  private_dns_enabled = true
+}

@@ -1,0 +1,34 @@
+# .github/workflows/destroy.yml
+name: Destroy All Resources (Manual)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  destroy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Destroy
+        run: terraform destroy -auto-approve -var-file=envs/dev.tfvars
+
+      - name: Done
+        run: echo "Everything destroyed — $0 cost!"

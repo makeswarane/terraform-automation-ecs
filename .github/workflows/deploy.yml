@@ -1,42 +1,46 @@
-name: Deploy microservice to ECS
+# .github/workflows/deploy.yml
+name: Deploy Microservice
 
 on:
   push:
     paths:
-      - 'src/microservice/**'
+      - 'microservice/**'
+      - '.github/workflows/deploy.yml'
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'src/microservice/**'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
     steps:
-    - uses: actions/checkout@v4
-    - name: Configure AWS credentials via OIDC
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-        aws-region: ${{ secrets.AWS_REGION || 'us-east-1' }}
-    - name: Login to ECR
-      id: login-ecr
-      run: |
-        aws ecr get-login-password --region ${{ secrets.AWS_REGION || 'us-east-1' }} | docker login --username AWS --password-stdin $(aws sts get-caller-identity --query Account --output text).dkr.ecr.${{ secrets.AWS_REGION || 'us-east-1' }}.amazonaws.com
-    - name: Build and push image
-      run: |
-        IMAGE_URI=$(jq -r '.ecr_microservice_uri.value' infra/terraform.tfstate 2>/dev/null || echo "${{ env.ECR_MICRO_URI }}")
-        if [ -z "$IMAGE_URI" ]; then echo "Set ECR URI in env or ensure infra applied"; exit 1; fi
-        SHORT=$(echo $GITHUB_SHA | cut -c1-7)
-        docker build -t $IMAGE_URI:sha-$SHORT src/microservice
-        docker push $IMAGE_URI:sha-$SHORT
-    - name: Update ECS task with new image (manual/simple)
-      run: |
-        echo "This step assumes you have awscli configured role and permissions."
-        # Fetch current task def, replace image, register and update service
-        CLUSTER=$(terraform -chdir=infra output -raw ecs_cluster_name)
-        SERVICE=$(terraform -chdir=infra output -json | jq -r '.ecs_cluster_name') || true
-        echo "Cluster: $CLUSTER"
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ap-south-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/microservice:$IMAGE_TAG ./microservice
+          docker push $ECR_REGISTRY/microservice:$IMAGE_TAG
+          echo "image=$ECR_REGISTRY/microservice:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Force new deployment
+        run: |
+          aws ecs update-service \
+            --cluster free-ecs \
+            --service microservice \
+            --force-new-deployment
+
+      - name: Wait for service stable
+        run: |
+          aws ecs wait services-stable --cluster free-ecs --services microservice

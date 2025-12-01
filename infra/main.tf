@@ -1,93 +1,82 @@
-# Top-level composition of modules
-
 module "network" {
-  source = "./modules/network"
-  vpc_cidr = var.vpc_cidr
-  public_subnet_cidrs = var.public_subnet_cidrs
-  private_subnet_cidrs = var.private_subnet_cidrs
-  tags = var.tags
-}
-
-module "iam" {
-  source = "./modules/iam"
-  project = var.project
-  environment = var.environment
-  tags = var.tags
-}
-
-module "ecr" {
-  source = "./modules/ecr"
-  name = var.ecr_microservice_name
-  tags = var.tags
-}
-
-module "secrets" {
-  source = "./modules/secrets"
-  db_username = var.db_username
-  create_secret = var.enable_rds
-  tags = var.tags
-}
-
-module "rds" {
-  source = "./modules/rds"
-  enable = var.enable_rds
-  db_engine = var.db_engine
-  db_instance_class = var.db_instance_class
-  db_allocated_storage = var.db_allocated_storage
-  db_name = var.db_name
-  subnet_ids = module.network.private_subnets
-  secret_arn = module.secrets.secret_arn
-  tags = var.tags
-  depends_on = [module.network]
-}
-
-module "ecs_cluster" {
-  source = "./modules/ecs_cluster"
-  cluster_name = var.cluster_name
-  vpc_id = module.network.vpc_id
-  private_subnets = module.network.private_subnets
-  iam_instance_profile = module.iam.ecs_instance_profile_name
-  ecs_instance_type = var.ecs_instance_type
-  ecs_min = var.ecs_instance_min
-  ecs_desired = var.ecs_instance_desired
-  ecs_max = var.ecs_instance_max
-  tags = var.tags
-}
-
-module "ecs_services" {
-  source = "./modules/ecs_services"
-  cluster_name = module.ecs_cluster.cluster_name
-  public_subnets = module.network.public_subnets
-  private_subnets = module.network.private_subnets
-  ecr_repo_uri = module.ecr.repository_url
-  microservice_port = var.microservice_container_port
-  wordpress_image = var.wordpress_image
-  wordpress_port = var.wordpress_container_port
-  secret_arn = module.secrets.secret_arn
-  tags = var.tags
+  source          = "./modules/network"
+  vpc_cidr        = var.vpc_cidr
+  public_subnets  = var.public_subnets
+  private_subnets = var.private_subnets
+  environment     = var.environment
 }
 
 module "alb" {
-  source = "./modules/alb"
-  vpc_id = module.network.vpc_id
-  public_subnets = module.network.public_subnets
-  domain = var.domain
-  acm_certificate_arn = var.acm_certificate_arn
-  tags = var.tags
-  services = module.ecs_services.service_map
+  source              = "./modules/alb"
+  vpc_id              = module.network.vpc_id
+  public_subnet_ids   = module.network.public_subnet_ids
+  certificate_arn     = var.acm_certificate_arn
+  domain_name         = var.domain_name
+  environment         = var.environment
 }
 
-module "ec2_app" {
-  source = "./modules/ec2_app"
-  create = var.create_ec2_app
-  count = var.ec2_app_count
-  instance_type = var.ec2_app_instance_type
-  private_subnets = module.network.private_subnets
-  domain = var.domain
-  tags = var.tags
+module "ecs_cluster" {
+  source            = "./modules/ecs_cluster"
+  cluster_name      = var.ecs_cluster_name
+  instance_type     = var.ecs_instance_type
+  min_size          = var.ecs_min_size
+  max_size          = var.ecs_max_size
+  desired_capacity  = var.ecs_desired_capacity
+  private_subnet_ids = module.network.private_subnet_ids
+  ecs_sg_id         = module.network.ecs_sg_id
+  environment       = var.environment
 }
 
-module "monitoring" {
-  source = "./modules/monitoring"
-  log_prefix = "${var.project}-${var.environment}"
+module "ecr" {
+  source      = "./modules/ecr"
+  repo_name   = "microservice"
+}
+
+module "secrets" {
+  source      = "./modules/secrets"
+  db_password = var.db_password
+  db_username = var.db_username
+  environment = var.environment
+}
+
+module "rds" {
+  source              = "./modules/rds"
+  subnet_ids          = module.network.private_subnet_ids
+  vpc_id              = module.network.vpc_id
+  db_instance_class   = var.db_instance_class
+  allocated_storage   = var.db_allocated_storage
+  db_name             = var.db_name
+  db_username         = var.db_username
+  db_password         = module.secrets.db_password
+  backup_retention    = var.backup_retention
+  skip_final_snapshot = var.skip_final_snapshot
+  environment         = var.environment
+  private_sg_id       = module.network.private_sg_id
+}
+
+module "ecs_services" {
+  source              = "./modules/ecs_services"
+  cluster_id          = module.ecs_cluster.cluster_id
+  cluster_name        = module.ecs_cluster.cluster_name
+  vpc_id              = module.network.vpc_id
+  alb_target_group_arns = module.alb.target_groups
+  db_secret_arn       = module.secrets.secret_arn
+  rds_endpoint        = module.rds.endpoint
+  ecr_repo_url        = module.ecr.repository_url
+  domain_name         = var.domain_name
+  wordpress_port      = var.wordpress_port
+  microservice_port   = var.microservice_port
+  environment         = var.environment
+}
+
+module "ec2_demo" {
+  source            = "./modules/ec2_demo"
+  subnet_ids        = module.network.private_subnet_ids
+  sg_id             = module.network.ecs_sg_id
+  instance_count    = var.ec2_demo_count
+  instance_type     = var.ec2_demo_type
+  target_group_arns = module.alb.demo_target_groups
+  instance_port     = var.instance_port
+  docker_port       = var.docker_port
+  domain_name       = var.domain_name
 }

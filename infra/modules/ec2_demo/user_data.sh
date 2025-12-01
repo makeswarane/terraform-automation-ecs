@@ -1,9 +1,10 @@
 mkdir -p terraform-automation-ecs-main/terraform-automation-ecs-main/infra/modules/ec2_demo
+
 cat > terraform-automation-ecs-main/terraform-automation-ecs-main/infra/modules/ec2_demo/user_data.sh <<'EOF'
 #!/bin/bash
-# user-data for demo EC2 instances (Amazon Linux 2)
-# Terraform will substitute ${instance_port} and ${docker_port}.
-# Any literal shell ${...} expansions must use $${...} so Terraform leaves them alone.
+# user-data for demo EC2 instances
+# Terraform replaces ${instance_port} and ${docker_port}.
+# Any shell-only expansion must be written as $${...} so Terraform won't parse it.
 
 set -eux
 
@@ -20,11 +21,11 @@ if docker ps -a --format '{{.Names}}' | grep -q '^demo-app$' ; then
   docker rm -f demo-app || true
 fi
 
-# Terraform will replace ${instance_port} and ${docker_port} at template time.
+# Terraform template variables - keep them unescaped
 docker run -d --name demo-app -p ${instance_port}:${docker_port} nginx:latest
 
-# Example runtime-only shell expansion (escaped so Terraform won't parse it)
-echo "Runtime expansion example: $${SOME_VAR:-default}" > /var/log/demo-app/info.txt
+# Example runtime-only expansion (escaped)
+echo "Runtime-expansion example: $${SOME_VAR:-default}" > /var/log/demo-app/info.txt
 
 echo "user-data finished" >> /var/log/demo-app/info.txt
 EOF

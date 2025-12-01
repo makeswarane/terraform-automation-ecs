@@ -1,9 +1,10 @@
 mkdir -p terraform-automation-ecs-main/terraform-automation-ecs-main/infra/modules/ecs_cluster
+
 cat > terraform-automation-ecs-main/terraform-automation-ecs-main/infra/modules/ecs_cluster/user_data.sh <<'EOF'
 #!/bin/bash
-# user-data for ECS cluster nodes (Amazon Linux 2)
-# Terraform will substitute ${cluster_name}.
-# Escape any literal shell ${...} with $${...}.
+# user-data for ECS cluster nodes
+# Terraform replaces ${cluster_name}.
+# Any shell-only expansion must be written as $${...} so Terraform won't parse it.
 
 set -eux
 
@@ -15,7 +16,7 @@ yum install -y ecs
 
 cat > /etc/ecs/ecs.config <<EOC
 ECS_CLUSTER=${cluster_name}
-# example runtime-only expansion (escaped)
+# runtime-only expansion (escaped)
 MY_RUNTIME_VAR=$${RUNTIME_VAR:-"default-val"}
 EOC
 

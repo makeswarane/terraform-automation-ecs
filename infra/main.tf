@@ -55,19 +55,18 @@ module "rds" {
 }
 
 module "ecs_services" {
-  source              = "./modules/ecs_services"
-  cluster_id          = module.ecs_cluster.cluster_id
-  cluster_name        = module.ecs_cluster.cluster_name
-  vpc_id              = module.network.vpc_id
+  source                = "./modules/ecs_services"
+  cluster_id            = module.ecs_cluster.cluster_id
+  cluster_name          = module.ecs_cluster.cluster_name
   alb_target_group_arns = module.alb.target_groups
-  db_secret_arn       = module.secrets.secret_arn
-  rds_endpoint        = module.rds.endpoint
-  ecr_repo_url        = module.ecr.repository_url
-  domain_name         = var.domain_name
-  wordpress_port      = var.wordpress_port
-  microservice_port   = var.microservice_port
-  environment         = var.environment
+  db_secret_arn         = module.secrets.secret_arn
+  rds_endpoint          = module.rds.endpoint
+  ecr_repo_url          = module.ecr.repository_url
+  wordpress_port        = var.wordpress_port
+  microservice_port     = var.microservice_port
+  environment           = var.environment
 }
+
 
 module "ec2_demo" {
   source            = "./modules/ec2_demo"
@@ -78,5 +77,5 @@ module "ec2_demo" {
   target_group_arns = module.alb.demo_target_groups
   instance_port     = var.instance_port
   docker_port       = var.docker_port
-  domain_name       = var.domain_name
+  # removed domain_name because the module doesn't declare it
 }

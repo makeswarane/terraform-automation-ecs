@@ -12,14 +12,21 @@ module "network" {
 
 module "alb" {
   source            = "./modules/alb"
+
+  # required inputs
+  vpc_id            = module.network.vpc_id
   public_subnet_ids = module.network.public_subnet_ids
+
+  # If you use a certificate, keep this line (optional otherwise)
   certificate_arn   = var.acm_certificate_arn
 
-  # PASS the ALB security group id that the alb module expects
-  alb_sg_id         = module.network.alb_sg_id
+  # domain_name expected by the module
+  domain_name       = var.domain_name
 
+  # pass environment if module expects it
   environment       = var.environment
 }
+
 
 
 module "ecs_cluster" {

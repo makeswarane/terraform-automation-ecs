@@ -22,7 +22,7 @@ module "alb" {
 
   # domain_name expected by the module
   domain_name       = var.domain_name
-
+  alb_sg_id = module.network.alb_sg_id
   # pass environment if module expects it
   environment       = var.environment
 }

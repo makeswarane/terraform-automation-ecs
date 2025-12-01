@@ -48,7 +48,6 @@ module "rds" {
   vpc_id              = module.network.vpc_id
   db_instance_class   = var.db_instance_class
   allocated_storage   = var.db_allocated_storage
-  db_name             = var.db_name
   db_username         = var.db_username
   db_password         = module.secrets.db_password
   backup_retention    = var.backup_retention

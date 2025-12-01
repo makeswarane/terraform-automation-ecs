@@ -80,5 +80,8 @@ module "ec2_demo" {
   target_group_arns = module.alb.demo_target_groups
   instance_port     = var.instance_port
   docker_port       = var.docker_port
-  # removed domain_name because the module doesn't declare it
+
+  # pass the environment down (required by the module)
+  environment = var.environment
 }
+

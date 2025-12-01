@@ -7,13 +7,16 @@ module "network" {
 }
 
 module "alb" {
-  source              = "./modules/alb"
-  vpc_id              = module.network.vpc_id
-  public_subnet_ids   = module.network.public_subnet_ids
-  certificate_arn     = var.acm_certificate_arn
-  domain_name         = var.domain_name
-  environment         = var.environment
+  source            = "./modules/alb"
+  public_subnet_ids = module.network.public_subnet_ids
+  certificate_arn   = var.acm_certificate_arn
+
+  # PASS the ALB security group id that the alb module expects
+  alb_sg_id         = module.network.alb_sg_id
+
+  environment       = var.environment
 }
+
 
 module "ecs_cluster" {
   source            = "./modules/ecs_cluster"

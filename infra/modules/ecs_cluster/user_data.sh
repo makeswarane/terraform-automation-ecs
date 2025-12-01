@@ -1,26 +1,27 @@
+mkdir -p terraform-automation-ecs-main/terraform-automation-ecs-main/infra/modules/ecs_cluster
+cat > terraform-automation-ecs-main/terraform-automation-ecs-main/infra/modules/ecs_cluster/user_data.sh <<'EOF'
 #!/bin/bash
-# user-data for the ECS cluster launch template
-# Terraform will substitute ${cluster_name}
+# user-data for ECS cluster nodes (Amazon Linux 2)
+# Terraform will substitute ${cluster_name}.
+# Escape any literal shell ${...} with $${...}.
 
 set -eux
 
-# install AWS CLI & ecs agent deps if needed
 yum update -y
 yum install -y aws-cli jq
 
-# Amazon Linux 2 ECS agent install (example)
-amazon-linux-extras install -y ecs
-systemctl enable --now ecs
+amazon-linux-extras enable ecs
+yum install -y ecs
 
-# Configure ECS cluster name in /etc/ecs/ecs.config
-cat > /etc/ecs/ecs.config <<EOF
+cat > /etc/ecs/ecs.config <<EOC
 ECS_CLUSTER=${cluster_name}
-# Example of escaping shell ${...} sequences for literal use:
-# this line will contain a literal bash expression that should be evaluated at runtime:
-MY_RUNTIME_VAR=\$${RUNTIME_VAR:-"default-val"}
-EOF
+# example runtime-only expansion (escaped)
+MY_RUNTIME_VAR=$${RUNTIME_VAR:-"default-val"}
+EOC
 
-# restart ECS agent to pick up config
-systemctl restart ecs || true
+systemctl enable --now ecs || true
 
 echo "ecs user-data finished" > /var/log/ecs-user-data.log
+EOF
+
+chmod +x terraform-automation-ecs-main/terraform-automation-ecs-main/infra/modules/ecs_cluster/user_data.sh

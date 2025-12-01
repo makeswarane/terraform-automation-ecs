@@ -4,7 +4,11 @@ module "network" {
   public_subnets  = var.public_subnets
   private_subnets = var.private_subnets
   environment     = var.environment
+
+  # pass the AWS region expected by the network module
+  region          = var.region
 }
+
 
 module "alb" {
   source            = "./modules/alb"

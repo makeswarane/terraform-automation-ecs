@@ -34,10 +34,13 @@ module "ecr" {
 
 module "secrets" {
   source      = "./modules/secrets"
-  db_password = var.db_password
+  # the module creates/generates the DB password itself, so do NOT pass db_password here
   db_username = var.db_username
+  # supply the RDS endpoint (the secrets module expects this for the secret host field)
+  rds_endpoint = module.rds.endpoint
   environment = var.environment
 }
+
 
 module "rds" {
   source              = "./modules/rds"

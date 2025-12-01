@@ -8,6 +8,11 @@ on:
       - '.github/workflows/infra.yml'
   workflow_dispatch:
 
+# ← ADD THESE 4 LINES ←
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   terraform:
     runs-on: ubuntu-latest

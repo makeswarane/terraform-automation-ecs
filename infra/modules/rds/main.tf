@@ -1,6 +1,6 @@
+# Final unique DB subnet group name
 resource "aws_db_subnet_group" "this" {
-  # New unique name to avoid conflict
-  name       = "${var.environment}-${var.db_name}-subnet-group-v2"
+  name       = "${var.environment}-${var.db_name}-subnet-core"
   subnet_ids = var.private_subnet_ids
 }
 

@@ -1,3 +1,4 @@
+# Assume role policy for ECS tasks
 data "aws_iam_policy_document" "ecs_task_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -9,8 +10,10 @@ data "aws_iam_policy_document" "ecs_task_assume" {
   }
 }
 
+# Execution role (for pulling images, logs, etc.)
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "${var.environment}-ecs-task-exec-v3"
+  # Final stable name
+  name               = "${var.environment}-ecs-task-exec-core"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume.json
 }
 
@@ -19,13 +22,17 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Task role (for app-level permissions like Secrets Manager)
 resource "aws_iam_role" "ecs_task_role" {
-  name               = "${var.environment}-ecs-task-role-v3"
+  # Final stable name
+  name               = "${var.environment}-ecs-task-role-core"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume.json
 }
 
 resource "aws_iam_policy" "ecs_task_secrets_policy" {
-  name = "${var.environment}-ecs-secrets-v3"
+  # Final stable name
+  name = "${var.environment}-ecs-secrets-core"
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -60,6 +67,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_role_attach" {
   policy_arn = aws_iam_policy.ecs_task_secrets_policy.arn
 }
 
+# Assume role policy for EC2 instances
 data "aws_iam_policy_document" "ec2_assume" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -71,8 +79,10 @@ data "aws_iam_policy_document" "ec2_assume" {
   }
 }
 
+# EC2 instance role (for SSM, logs, ECR read)
 resource "aws_iam_role" "ec2_instance_role" {
-  name               = "${var.environment}-ec2-instance-role-v3"
+  # Final stable name
+  name               = "${var.environment}-ec2-instance-role-core"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume.json
 }
 
@@ -92,7 +102,8 @@ resource "aws_iam_role_policy_attachment" "ec2_cloudwatch_attach" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${var.environment}-ec2-profile-v3"
+  # Final stable name
+  name = "${var.environment}-ec2-profile-core"
   role = aws_iam_role.ec2_instance_role.name
 }
 

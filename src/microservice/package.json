@@ -1,14 +1,12 @@
 {
-  "name": "hello-microservice",
+  "name": "piedpipers-microservice",
   "version": "1.0.0",
-  "description": "Tiny Node.js microservice for ECS demo",
-  "main": "app.js",
+  "description": "Simple Node.js microservice for ECS assignment",
+  "main": "server.js",
   "scripts": {
-    "start": "node app.js"
+    "start": "node server.js"
   },
-  "author": "You",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18"
+  "dependencies": {
+    "express": "^4.19.0"
   }
 }

@@ -14,8 +14,8 @@ resource "aws_lb_listener" "http" {
   default_action {
     type = "redirect"
     redirect {
-      protocol   = "HTTPS"
-      port       = "443"
+      protocol    = "HTTPS"
+      port        = "443"
       status_code = "HTTP_301"
     }
   }
@@ -84,6 +84,7 @@ resource "aws_lb_target_group" "ec2_instance" {
   port        = 80
   protocol    = "HTTP"
   target_type = "instance"
+  vpc_id      = var.vpc_id                  # 👈 NEW
 
   health_check {
     path     = "/"
@@ -97,6 +98,7 @@ resource "aws_lb_target_group" "ec2_docker" {
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
+  vpc_id      = var.vpc_id                  # 👈 NEW
 
   health_check {
     path     = "/"

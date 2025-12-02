@@ -13,6 +13,7 @@ resource "aws_lb_target_group" "wordpress" {
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
+  vpc_id      = var.vpc_id               # 👈 NEW
 
   health_check {
     path              = "/"
@@ -28,6 +29,7 @@ resource "aws_lb_target_group" "micro" {
   port        = 3000
   protocol    = "HTTP"
   target_type = "instance"
+  vpc_id      = var.vpc_id               # 👈 NEW
 
   health_check {
     path              = "/"

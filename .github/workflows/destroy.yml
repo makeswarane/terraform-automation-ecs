@@ -1,58 +1,44 @@
-name: infra.destroy
+name: Destroy Infrastructure
 
 on:
-  workflow_dispatch:
-    inputs:
-      tfvars_env:
-        description: "Tfvars env name (dev, free, etc.)"
-        required: true
-        default: "dev"
-      confirm:
-        description: 'Type DESTROY to confirm full Terraform destroy'
-        required: true
-        default: 'NO'
-
-# 🔐 Required for OIDC + aws-actions/configure-aws-credentials
-permissions:
-  id-token: write
-  contents: read
+  workflow_dispatch:   # ← Manual trigger only
 
 jobs:
   destroy:
-    if: ${{ github.event.inputs.confirm == 'DESTROY' }}
+    name: Terraform Destroy
     runs-on: ubuntu-latest
 
-    env:
-      # Same TF_VAR_* you use in infra.cicd (values come from GitHub Secrets)
-      TF_VAR_region:              ${{ secrets.AWS_REGION }}
-      TF_VAR_account_id:          ${{ secrets.AWS_ACCOUNT_ID }}
-      TF_VAR_domain_name:         ${{ secrets.DOMAIN_NAME }}
-      TF_VAR_alb_certificate_arn: ${{ secrets.ACM_CERTIFICATE_ARN }}
-      TF_VAR_db_password:         ${{ secrets.DB_PASSWORD }}
+    permissions:
+      id-token: write   # Required for OIDC
+      contents: read
 
     steps:
+      # Checkout infra repo
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
+      # Authenticate to AWS using OIDC
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # Install Terraform
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.0
+        uses: hashicorp/setup-terraform@v3
 
+      # Initialize Terraform
       - name: Terraform Init
         working-directory: infra
         run: terraform init
 
-      - name: Terraform Plan Destroy
+      # Show destroy plan (Safety)
+      - name: Terraform Destroy Plan
         working-directory: infra
-        run: terraform plan -destroy -var-file=envs/${{ github.event.inputs.tfvars_env }}.tfvars -out=tfplan
+        run: terraform plan -destroy -var-file=envs/dev.tfvars -out=tfdestroy
 
-      - name: Terraform Destroy
+      # Destroy infra
+      - name: Terraform Destroy Apply
         working-directory: infra
-        run: terraform apply -auto-approve tfplan
+        run: terraform apply -auto-approve tfdestroy

@@ -12,13 +12,18 @@ on:
         required: true
         default: 'NO'
 
+# 🔐 Required for OIDC + aws-actions/configure-aws-credentials
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   destroy:
     if: ${{ github.event.inputs.confirm == 'DESTROY' }}
     runs-on: ubuntu-latest
 
     env:
-      # Pass same TF_VARs you use in infra.cicd
+      # Same TF_VAR_* you use in infra.cicd (values come from GitHub Secrets)
       TF_VAR_region:              ${{ secrets.AWS_REGION }}
       TF_VAR_account_id:          ${{ secrets.AWS_ACCOUNT_ID }}
       TF_VAR_domain_name:         ${{ secrets.DOMAIN_NAME }}

@@ -1,10 +1,12 @@
 resource "aws_cloudwatch_log_group" "wordpress" {
-  name              = "/ecs/wordpress"
+  # New name to avoid conflict with old existing log group
+  name              = "/ecs/${var.environment}-wordpress"
   retention_in_days = 14
 }
 
 resource "aws_cloudwatch_log_group" "micro" {
-  name              = "/ecs/microservice"
+  # New name to avoid conflict with old existing log group
+  name              = "/ecs/${var.environment}-microservice"
   retention_in_days = 14
 }
 
@@ -13,7 +15,7 @@ resource "aws_lb_target_group" "wordpress" {
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
-  vpc_id      = var.vpc_id               # 👈 NEW
+  vpc_id      = var.vpc_id
 
   health_check {
     path              = "/"
@@ -29,7 +31,7 @@ resource "aws_lb_target_group" "micro" {
   port        = 3000
   protocol    = "HTTP"
   target_type = "instance"
-  vpc_id      = var.vpc_id               # 👈 NEW
+  vpc_id      = var.vpc_id
 
   health_check {
     path              = "/"

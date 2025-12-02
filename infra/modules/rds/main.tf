@@ -1,5 +1,6 @@
 resource "aws_db_subnet_group" "this" {
-  name       = "${var.db_name}-subnet-group"
+  # New unique name to avoid conflict
+  name       = "${var.environment}-${var.db_name}-subnet-group-v2"
   subnet_ids = var.private_subnet_ids
 }
 
@@ -10,7 +11,6 @@ resource "aws_db_instance" "wp" {
   engine_version          = "8.0"
   instance_class          = var.db_instance_class
 
-  # ✅ Correct argument is db_name (not name) 
   db_name   = var.db_name
   username  = var.db_username
   password  = var.db_password

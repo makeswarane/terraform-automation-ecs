@@ -10,7 +10,7 @@ data "aws_iam_policy_document" "ecs_task_assume" {
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "${var.environment}-ecs-task-exec-v2"
+  name               = "${var.environment}-ecs-task-exec-v3"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume.json
 }
 
@@ -20,12 +20,12 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_attach" {
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  name               = "${var.environment}-ecs-task-role-v2"
+  name               = "${var.environment}-ecs-task-role-v3"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume.json
 }
 
 resource "aws_iam_policy" "ecs_task_secrets_policy" {
-  name = "${var.environment}-ecs-secrets-v2"
+  name = "${var.environment}-ecs-secrets-v3"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "ec2_assume" {
 }
 
 resource "aws_iam_role" "ec2_instance_role" {
-  name               = "${var.environment}-ec2-instance-role-v2"
+  name               = "${var.environment}-ec2-instance-role-v3"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume.json
 }
 
@@ -92,7 +92,7 @@ resource "aws_iam_role_policy_attachment" "ec2_cloudwatch_attach" {
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${var.environment}-ec2-profile-v2"
+  name = "${var.environment}-ec2-profile-v3"
   role = aws_iam_role.ec2_instance_role.name
 }
 

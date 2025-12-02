@@ -1,14 +1,7 @@
-variable "private_sg_id"      { type = string }
-variable "private_subnet_ids" { type = list(string) }
-variable "iam_instance_profile" { type = string }
-variable "domain"             {}
-variable "instance_count"     { default = 2 }
-variable "ec2_instance_type"  { default = "t3.micro" }
-variable "environment"        { default = "dev" }
-
 data "aws_ami" "amzn2" {
   most_recent = true
   owners      = ["amazon"]
+
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm-*-x86_64-gp2"]
@@ -22,11 +15,20 @@ resource "aws_instance" "app" {
   subnet_id           = element(var.private_subnet_ids, count.index)
   iam_instance_profile = var.iam_instance_profile
   vpc_security_group_ids = [var.private_sg_id]
-  user_data           = templatefile("${path.module}/userdata.sh.tpl", { domain = var.domain })
+
+  user_data = templatefile("${path.module}/userdata.sh.tpl", {
+    domain = var.domain
+  })
+
   tags = {
     Name = "${var.environment}-ec2-app-${count.index}"
   }
 }
 
-output "instance_ids"        { value = aws_instance.app[*].id }
-output "instance_private_ips" { value = aws_instance.app[*].private_ip }
+output "instance_ids" {
+  value = aws_instance.app[*].id
+}
+
+output "instance_private_ips" {
+  value = aws_instance.app[*].private_ip
+}

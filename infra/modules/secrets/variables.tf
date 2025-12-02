@@ -1,3 +1,12 @@
-variable "db_username" {}
-variable "db_password" {}
-variable "environment" { default = "dev" }
+variable "db_username" {
+  type = string
+}
+
+variable "db_password" {
+  type = string
+}
+
+variable "environment" {
+  type    = string
+  default = "dev"
+}

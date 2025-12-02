@@ -80,7 +80,8 @@ resource "aws_lb_listener_rule" "micro" {
 
 # Target groups for EC2 instances (NGINX & Docker)
 resource "aws_lb_target_group" "ec2_instance" {
-  name        = "${var.environment}-tg-ec2-instance"
+  # 👇 new name to avoid conflict with existing free-tg-ec2-instance
+  name        = "${var.environment}-tg-ec2-instance-v2"
   port        = 80
   protocol    = "HTTP"
   target_type = "instance"
@@ -94,7 +95,8 @@ resource "aws_lb_target_group" "ec2_instance" {
 }
 
 resource "aws_lb_target_group" "ec2_docker" {
-  name        = "${var.environment}-tg-ec2-docker"
+  # 👇 new name to avoid conflict with existing free-tg-ec2-docker
+  name        = "${var.environment}-tg-ec2-docker-v2"
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
@@ -107,7 +109,7 @@ resource "aws_lb_target_group" "ec2_docker" {
   }
 }
 
-# Attach EC2 instances to target groups using count (length is known from instance_count)
+# Attach EC2 instances to target groups using count
 resource "aws_lb_target_group_attachment" "ec2_instance_attach" {
   count            = length(var.ec2_instance_ids)
   target_group_arn = aws_lb_target_group.ec2_instance.arn

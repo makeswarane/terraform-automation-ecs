@@ -13,7 +13,8 @@ resource "aws_ecs_cluster" "this" {
 }
 
 resource "aws_launch_template" "ecs" {
-  name          = "${var.cluster_name}-lt"
+  # 👇 new name to avoid conflict with existing free-ecs-lt
+  name          = "${var.cluster_name}-lt-v2"
   image_id      = data.aws_ami.ecs_ami.id
   instance_type = var.ecs_instance_type
 

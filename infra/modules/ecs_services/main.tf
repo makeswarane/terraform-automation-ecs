@@ -1,17 +1,16 @@
 resource "aws_cloudwatch_log_group" "wordpress" {
-  # New name to avoid conflict with old existing log group
   name              = "/ecs/${var.environment}-wordpress"
   retention_in_days = 14
 }
 
 resource "aws_cloudwatch_log_group" "micro" {
-  # New name to avoid conflict with old existing log group
   name              = "/ecs/${var.environment}-microservice"
   retention_in_days = 14
 }
 
 resource "aws_lb_target_group" "wordpress" {
-  name        = "tg-wordpress"
+  # 👇 new name to avoid conflict with old tg-wordpress
+  name        = "${var.environment}-tg-wordpress-v2"
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
@@ -27,7 +26,8 @@ resource "aws_lb_target_group" "wordpress" {
 }
 
 resource "aws_lb_target_group" "micro" {
-  name        = "tg-microservice"
+  # 👇 new name to avoid conflict with old tg-microservice
+  name        = "${var.environment}-tg-microservice-v2"
   port        = 3000
   protocol    = "HTTP"
   target_type = "instance"

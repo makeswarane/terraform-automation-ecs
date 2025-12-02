@@ -22,7 +22,7 @@ variable "db_username" {
   type = string
 }
 
-variable "db_secret_arn" {
+variable "db_password" {
   type = string
 }
 

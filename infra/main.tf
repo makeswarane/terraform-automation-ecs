@@ -34,12 +34,13 @@ module "rds" {
   db_instance_class     = var.db_instance_class
   db_allocated_storage  = var.db_allocated_storage
   db_username           = var.db_username
-  db_secret_arn         = module.secrets.db_secret_arn
+  db_password           = var.db_password      # 👈 NEW
   rds_security_group_id = module.network.rds_sg_id
   backup_retention      = var.backup_retention
   skip_final_snapshot   = var.skip_final_snapshot
   environment           = var.environment
 }
+
 
 module "ecs_cluster" {
   source               = "./modules/ecs_cluster"

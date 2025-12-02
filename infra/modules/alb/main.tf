@@ -84,7 +84,7 @@ resource "aws_lb_target_group" "ec2_instance" {
   port        = 80
   protocol    = "HTTP"
   target_type = "instance"
-  vpc_id      = var.vpc_id                  # 👈 NEW
+  vpc_id      = var.vpc_id
 
   health_check {
     path     = "/"
@@ -98,7 +98,7 @@ resource "aws_lb_target_group" "ec2_docker" {
   port        = 8080
   protocol    = "HTTP"
   target_type = "instance"
-  vpc_id      = var.vpc_id                  # 👈 NEW
+  vpc_id      = var.vpc_id
 
   health_check {
     path     = "/"
@@ -107,18 +107,18 @@ resource "aws_lb_target_group" "ec2_docker" {
   }
 }
 
-# Attach EC2 instances to target groups
+# Attach EC2 instances to target groups using count (length is known from instance_count)
 resource "aws_lb_target_group_attachment" "ec2_instance_attach" {
-  for_each         = toset(var.ec2_instance_ids)
+  count            = length(var.ec2_instance_ids)
   target_group_arn = aws_lb_target_group.ec2_instance.arn
-  target_id        = each.value
+  target_id        = var.ec2_instance_ids[count.index]
   port             = 80
 }
 
 resource "aws_lb_target_group_attachment" "ec2_docker_attach" {
-  for_each         = toset(var.ec2_docker_ids)
+  count            = length(var.ec2_docker_ids)
   target_group_arn = aws_lb_target_group.ec2_docker.arn
-  target_id        = each.value
+  target_id        = var.ec2_docker_ids[count.index]
   port             = 8080
 }
 

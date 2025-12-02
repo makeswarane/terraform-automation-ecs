@@ -1,6 +1,6 @@
 resource "aws_secretsmanager_secret" "db_secret" {
-  # New unique name to avoid conflict with old "free-db-creds" that’s scheduled for deletion
-  name = "${var.environment}-db-creds-v3"
+  # Use a brand-new name; don't delete this one from console.
+  name = "${var.environment}-db-creds-main"
 }
 
 resource "aws_secretsmanager_secret_version" "db_secret_version" {

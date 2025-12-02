@@ -10,7 +10,7 @@ resource "aws_db_instance" "wp" {
   engine_version          = "8.0"
   instance_class          = var.db_instance_class
 
-  # ✅ Correct argument is db_name (not name)
+  # ✅ Correct argument is db_name (not name) 
   db_name   = var.db_name
   username  = var.db_username
   password  = var.db_password

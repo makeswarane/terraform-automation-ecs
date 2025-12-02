@@ -1,14 +1,10 @@
-# .github/workflows/deploy.yml
-name: Deploy Microservice
+name: deploy.cicd
 
 on:
   push:
-    paths:
-      - 'microservice/**'
-      - '.github/workflows/deploy.yml'
+    branches: [ main ]
   workflow_dispatch:
 
-# ← ADD THESE 4 LINES ←
 permissions:
   id-token: write
   contents: read
@@ -16,36 +12,44 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
-          aws-region: ap-south-1
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ github.sha }}
+      - name: Login to ECR
         run: |
-          docker build -t $ECR_REGISTRY/microservice:$IMAGE_TAG ./microservice
-          docker push $ECR_REGISTRY/microservice:$IMAGE_TAG
-          echo "image=$ECR_REGISTRY/microservice:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          REPO="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/microservice"
+          aws ecr get-login-password --region "${AWS_REGION}" \
+            | docker login --username AWS --password-stdin "${REPO}"
 
-      - name: Force new deployment
+      - name: Build and Push Docker Image
         run: |
+          ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          IMAGE_TAG=latest
+          REPO="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/microservice"
+
+          docker build -t microservice:${IMAGE_TAG} ./microservice
+          docker tag microservice:${IMAGE_TAG} ${REPO}:${IMAGE_TAG}
+          docker push ${REPO}:${IMAGE_TAG}
+
+      - name: Update ECS Service
+        run: |
+          AWS_REGION=${{ secrets.AWS_REGION }}
+          CLUSTER_NAME="free-ecs"          # must match ecs_cluster_name in tfvars
+          SERVICE_NAME="microservice"
+
           aws ecs update-service \
-            --cluster free-ecs \
-            --service microservice \
-            --force-new-deployment
-
-      - name: Wait for service stable
-        run: |
-          aws ecs wait services-stable --cluster free-ecs --services microservice
+            --cluster "${CLUSTER_NAME}" \
+            --service "${SERVICE_NAME}" \
+            --force-new-deployment \
+            --region "${AWS_REGION}"

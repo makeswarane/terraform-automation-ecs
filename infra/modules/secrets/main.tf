@@ -1,21 +1,17 @@
-# infra/modules/secrets/main.tf
-resource "random_password" "db" {
-  length  = 16
-  special = false
+variable "db_username" {}
+variable "db_password" {}
+variable "environment" { default = "dev" }
+
+resource "aws_secretsmanager_secret" "db_secret" {
+  name = "${var.environment}-db-creds"
 }
 
-resource "aws_secretsmanager_secret" "db" {
-  name = "${var.environment}-db-credentials"
-}
-
-resource "aws_secretsmanager_secret_version" "db" {
-  secret_id = aws_secretsmanager_secret.db.id
+resource "aws_secretsmanager_secret_version" "db_secret_version" {
+  secret_id = aws_secretsmanager_secret.db_secret.id
   secret_string = jsonencode({
     username = var.db_username
-    password = random_password.db.result
-    engine   = "mysql"
-    host     = var.rds_endpoint
-    port     = 3306
-    dbname   = "wordpress"
+    password = var.db_password
   })
 }
+
+output "db_secret_arn" { value = aws_secretsmanager_secret.db_secret.arn }

@@ -1,9 +1,9 @@
-variable "cluster_id"            { type = string }
-variable "cluster_name"          { type = string }
-variable "alb_target_group_arns" { type = map(string) }
-variable "db_secret_arn"         { type = string }
-variable "rds_endpoint"          { type = string }
-variable "ecr_repo_url"          { type = string }
-variable "wordpress_port"        { type = number }
-variable "microservice_port"     { type = number }
-variable "environment"           { type = string }
+variable "cluster_name" {}
+variable "private_subnet_ids" { type = list(string) }
+variable "ecr_repo" {}
+variable "rds_endpoint" {}
+variable "db_secret_arn" {}
+variable "iam_task_role_arn" {}
+variable "alb_sg_id" {}
+variable "environment" { default = "dev" }
+variable "region" { default = "ap-south-1" }

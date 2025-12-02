@@ -1,3 +1,3 @@
-variable "db_username" { type = string }
-variable "rds_endpoint" { type = string }
-variable "environment"  { type = string }
+variable "db_username" {}
+variable "db_password" {}
+variable "environment" { default = "dev" }

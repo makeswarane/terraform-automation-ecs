@@ -1,53 +1,105 @@
-name: deploy.cicd
+name: Deploy Microservice
 
 on:
-  push:
-    branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch:   # run manually from GitHub Actions
 
 permissions:
-  id-token: write
+  id-token: write      # for OIDC
   contents: read
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      # 1) Checkout this infra repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
+      # 2) Configure AWS credentials (assume role)
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Login to ECR
-        run: |
-          ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
-          AWS_REGION=${{ secrets.AWS_REGION }}
-          REPO="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/microservice"
-          aws ecr get-login-password --region "${AWS_REGION}" \
-            | docker login --username AWS --password-stdin "${REPO}"
+      # 3) Login to Amazon ECR
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push Docker Image
+      # 4) Create microservice source code dynamically in ./microservice
+      - name: Create microservice app dynamically
+        run: |
+          mkdir -p microservice
+
+          cat > microservice/server.js << 'EOF'
+          const express = require("express");
+          const app = express();
+          const port = process.env.PORT || 3000;
+
+          app.get("/", (req, res) => {
+            res.send("Hello from Microservice");
+          });
+
+          app.listen(port, () => {
+            console.log(`Microservice listening on port ${port}`);
+          });
+          EOF
+
+          cat > microservice/package.json << 'EOF'
+          {
+            "name": "piedpipers-microservice",
+            "version": "1.0.0",
+            "description": "Simple Node.js microservice",
+            "main": "server.js",
+            "scripts": {
+              "start": "node server.js"
+            },
+            "dependencies": {
+              "express": "^4.19.0"
+            }
+          }
+          EOF
+
+          cat > microservice/Dockerfile << 'EOF'
+          FROM node:18-alpine
+          WORKDIR /app
+          COPY package.json package-lock.json* ./
+          RUN npm install --production || npm install --production --legacy-peer-deps
+          COPY server.js .
+          ENV PORT=3000
+          EXPOSE 3000
+          CMD ["npm", "start"]
+          EOF
+
+      # 5) Build and push Docker image to ECR
+      - name: Build and push microservice image
         run: |
           ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
           AWS_REGION=${{ secrets.AWS_REGION }}
           IMAGE_TAG=latest
           REPO="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/microservice"
 
+          echo "Building image microservice:${IMAGE_TAG}..."
           docker build -t microservice:${IMAGE_TAG} ./microservice
+
+          echo "Tagging image to ${REPO}:${IMAGE_TAG}..."
           docker tag microservice:${IMAGE_TAG} ${REPO}:${IMAGE_TAG}
+
+          echo "Pushing to ECR..."
           docker push ${REPO}:${IMAGE_TAG}
 
-      - name: Update ECS Service
+      # 6) Update ECS service to use the new image
+      - name: Update ECS service
         run: |
           AWS_REGION=${{ secrets.AWS_REGION }}
-          CLUSTER_NAME="free-ecs"          # must match ecs_cluster_name in tfvars
-          SERVICE_NAME="microservice"
+          ACCOUNT_ID=${{ secrets.AWS_ACCOUNT_ID }}
 
+          CLUSTER_NAME="free-ecs"         # matches your Terraform ECS cluster name
+          SERVICE_NAME="microservice"     # matches your ECS service name
+
+          echo "Forcing new deployment on ECS service ${SERVICE_NAME} in cluster ${CLUSTER_NAME} ..."
           aws ecs update-service \
             --cluster "${CLUSTER_NAME}" \
             --service "${SERVICE_NAME}" \

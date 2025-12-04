@@ -1,6 +1,6 @@
 resource "aws_secretsmanager_secret" "db_secret" {
-  # Final stable name – don't change this again and don't delete it in console
-  name = "${var.environment}-db-creds-core"
+  # Use a brand-new, stable name. Do NOT delete this from console.
+  name = "${var.environment}-db-creds-managed"
 }
 
 resource "aws_secretsmanager_secret_version" "db_secret_version" {

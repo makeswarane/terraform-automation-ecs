@@ -12,7 +12,7 @@ data "aws_iam_policy_document" "ecs_task_assume" {
 
 # Execution role (for pulling images, logs, etc.)
 resource "aws_iam_role" "ecs_task_execution_role" {
-  # Keep core name (no conflict reported for this)
+  # This name already worked, keep it
   name               = "${var.environment}-ecs-task-exec-core"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume.json
 }
@@ -24,13 +24,13 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_attach" {
 
 # Task role (for app-level permissions like Secrets Manager)
 resource "aws_iam_role" "ecs_task_role" {
-  # Keep core name (no conflict reported for this)
+  # This name already worked, keep it
   name               = "${var.environment}-ecs-task-role-core"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume.json
 }
 
 resource "aws_iam_policy" "ecs_task_secrets_policy" {
-  # ✅ New name to avoid existing free-ecs-secrets-core
+  # This name is okay (different from old *-core one)
   name = "${var.environment}-ecs-secrets-managed"
 
   policy = jsonencode({
@@ -81,7 +81,7 @@ data "aws_iam_policy_document" "ec2_assume" {
 
 # EC2 instance role (for SSM, logs, ECR read)
 resource "aws_iam_role" "ec2_instance_role" {
-  # ✅ New name to avoid existing free-ec2-instance-role-core
+  # This name is already different from old *-core, keep it
   name               = "${var.environment}-ec2-instance-role-managed"
   assume_role_policy = data.aws_iam_policy_document.ec2_assume.json
 }
@@ -101,9 +101,9 @@ resource "aws_iam_role_policy_attachment" "ec2_cloudwatch_attach" {
   policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
 }
 
-# EC2 instance profile (name was not conflicting, so we keep it)
+# ✅ EC2 instance profile - give it a brand-new name
 resource "aws_iam_instance_profile" "ec2_profile" {
-  name = "${var.environment}-ec2-profile-core"
+  name = "${var.environment}-ec2-profile-final"
   role = aws_iam_role.ec2_instance_role.name
 }
 

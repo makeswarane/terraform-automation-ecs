@@ -1,6 +1,12 @@
+##################################
+# Secrets Manager for DB creds
+##################################
+
 resource "aws_secretsmanager_secret" "db_secret" {
-  # FINAL stable name - do not delete this from console once it exists
-  name = "${var.environment}-db-creds-final"
+  # Use name_prefix instead of fixed name.
+  # Even if an old secret name is scheduled for deletion,
+  # AWS will generate a new unique final name.
+  name_prefix = "${var.environment}-db-creds-"
 }
 
 resource "aws_secretsmanager_secret_version" "db_secret_version" {
@@ -9,8 +15,4 @@ resource "aws_secretsmanager_secret_version" "db_secret_version" {
     username = var.db_username
     password = var.db_password
   })
-}
-
-output "db_secret_arn" {
-  value = aws_secretsmanager_secret.db_secret.arn
 }

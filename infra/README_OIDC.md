@@ -1,4 +1,4 @@
-# OIDC Role creation for GitHub Actions (example)
+# OIDC Role creation for GitHub Actions (example) 
 
 Replace <ACCOUNT_ID> and <REPO>.
 

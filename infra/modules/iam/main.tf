@@ -30,7 +30,7 @@ resource "aws_iam_role" "ecs_task_role" {
 }
 
 resource "aws_iam_policy" "ecs_task_secrets_policy" {
-  # ✅ New name to avoid existing free-ecs-secrets-core
+  # ✅ New name to avoid existing free-ecs-secrets-core 
   name = "${var.environment}-ecs-secrets-managed"
 
   policy = jsonencode({

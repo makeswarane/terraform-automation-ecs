@@ -1,47 +1,65 @@
+############################################
+# GLOBAL VARIABLES
+############################################
+
 variable "region" {
-  type    = string
-  default = "ap-south-1"
+  description = "AWS region"
+  type        = string
+  default     = "ap-south-1"
 }
 
 variable "account_id" {
-  type = string
+  description = "AWS Account ID"
+  type        = string
 }
 
 variable "environment" {
-  type    = string
-  default = "dev"
+  description = "Environment name"
+  type        = string
+  default     = "dev"
 }
 
 variable "domain_name" {
+  description = "Root domain name (example: piedpipers.online)"
   type        = string
-  description = "Your domain (e.g., piedpipers.online)"
 }
 
-# Network
+############################################
+# NETWORK
+############################################
+
 variable "vpc_cidr" {
-  type    = string
-  default = "10.0.0.0/16"
+  description = "VPC CIDR block"
+  type        = string
+  default     = "10.0.0.0/16"
 }
 
-variable "public_subnet_cidrs" {
-  type    = list(string)
-  default = ["10.0.0.0/24","10.0.1.0/24"]
+variable "public_subnets" {
+  description = "Public subnet CIDR list"
+  type        = list(string)
+  default     = ["10.0.0.0/24", "10.0.1.0/24"]
 }
 
-variable "private_subnet_cidrs" {
-  type    = list(string)
-  default = ["10.0.10.0/24","10.0.11.0/24"]
+variable "private_subnets" {
+  description = "Private subnet CIDR list"
+  type        = list(string)
+  default     = ["10.0.10.0/24", "10.0.11.0/24"]
 }
 
-# ECS Cluster
+############################################
+# ECS CLUSTER (EC2 LAUNCH TYPE)
+############################################
+
 variable "ecs_cluster_name" {
-  type    = string
-  default = "dev-ecs"
+  description = "ECS cluster name"
+  type        = string
+  default     = "dev-ecs"
 }
 
 variable "ecs_instance_type" {
-  type    = string
-  default = "t3.micro"
+  description = "Instance type for ECS EC2 nodes"
+  type        = string
+  default     = "t3.micro"
 }
 
 variable "ecs_min_size" {
@@ -59,61 +77,82 @@ variable "ecs_desired_capacity" {
   default = 1
 }
 
-# EC2 demo instances
+############################################
+# EC2 Standalone Instances (Instance + Docker)
+############################################
+
 variable "ec2_demo_count" {
-  type    = number
-  default = 2
+  description = "Number of EC2 demo servers"
+  type        = number
+  default     = 2
 }
 
 variable "ec2_demo_type" {
-  type    = string
-  default = "t3.micro"
+  description = "Instance type for demo EC2"
+  type        = string
+  default     = "t3.micro"
 }
 
-# RDS
+############################################
+# RDS – WORDPRESS DATABASE
+############################################
+
 variable "db_name" {
-  type    = string
-  default = "wordpress"
+  description = "WordPress DB name"
+  type        = string
+  default     = "wordpress"
 }
 
 variable "db_username" {
-  type    = string
-  default = "wpuser"
+  description = "DB username"
+  type        = string
+  default     = "wpuser"
 }
 
 variable "db_password" {
-  type      = string
-  sensitive = true
+  description = "DB password"
+  type        = string
+  sensitive   = true
 }
 
 variable "db_instance_class" {
-  type    = string
-  default = "db.t3.small"
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.small"
 }
 
 variable "db_allocated_storage" {
-  type    = number
-  default = 20
+  description = "RDS storage"
+  type        = number
+  default     = 20
 }
 
 variable "backup_retention" {
-  type    = number
-  default = 7
+  description = "Retention period"
+  type        = number
+  default     = 7
 }
 
 variable "skip_final_snapshot" {
-  type    = bool
-  default = false
+  description = "Skip snapshot on destroy"
+  type        = bool
+  default     = false
 }
 
-# ALB / ACM
+############################################
+# ALB / HTTPS
+############################################
+
 variable "alb_certificate_arn" {
+  description = "ACM certificate ARN for HTTPS"
   type        = string
-  description = "ACM cert ARN for domain"
   default     = ""
 }
 
-# (Optional) Ports – currently not fully wired
+############################################
+# SERVICE PORTS
+############################################
+
 variable "wordpress_port" {
   type    = number
   default = 8081

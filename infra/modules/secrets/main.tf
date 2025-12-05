@@ -1,5 +1,5 @@
 ##################################
-# Secrets Manager for DB creds
+# Secrets Manager for DB creds 
 ##################################
 
 resource "aws_secretsmanager_secret" "db_secret" {

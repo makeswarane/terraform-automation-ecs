@@ -4,7 +4,7 @@ on:
   workflow_dispatch:   # run manually from GitHub Actions
 
 permissions:
-  id-token: write      # for OIDC
+  id-token: write      # for OIDC 
   contents: read
 
 jobs:

@@ -1,0 +1,33 @@
+name: Terraform Unlock
+
+on:
+  workflow_dispatch: # run manually when you see lock errors
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  unlock:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init
+
+      - name: Force unlock Terraform state
+        working-directory: infra
+        run: terraform force-unlock -force b30bdc62-1053-b0c5-0a44-baefbf11b860

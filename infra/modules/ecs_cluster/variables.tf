@@ -39,6 +39,9 @@ variable "region" {
 }
 
 variable "environment" {
-  type    = string
-  default = "dev"
+  type = string
+}
+
+variable "private_sg_id" {
+  type = string
 }

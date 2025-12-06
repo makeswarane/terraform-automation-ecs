@@ -45,18 +45,22 @@ module "rds" {
 
 
 module "ecs_cluster" {
-  source               = "./modules/ecs_cluster"
-  vpc_id               = module.network.vpc_id
-  private_subnet_ids   = module.network.private_subnet_ids
-  public_subnet_ids    = module.network.public_subnet_ids
+  source = "./modules/ecs_cluster"
+
+  vpc_id             = module.network.vpc_id
+  private_subnet_ids = module.network.private_subnet_ids
+  public_subnet_ids  = module.network.public_subnet_ids
+
   ecs_instance_type    = var.ecs_instance_type
   ecs_min_size         = var.ecs_min_size
   ecs_max_size         = var.ecs_max_size
   ecs_desired_capacity = var.ecs_desired_capacity
+
   iam_instance_profile = module.iam.ec2_instance_profile_name
   cluster_name         = var.ecs_cluster_name
   region               = var.region
   environment          = var.environment
+  private_sg_id        = module.network.private_sg_id
 }
 
 module "ecs_services" {
